@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Kelime Çalışması</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #f9f9f9;
+      font-family: Arial, sans-serif;
+    }
+    .controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+    #word {
+      position: absolute;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 999;
+    }
+    #inputArea {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      display: none;
+      text-align: center;
+    }
+    #userInput {
+      font-size: 18px;
+      padding: 5px;
+    }
+    #result {
+      margin-top: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <label>TXT Dosyası: <input type="file" id="fileInput" accept=".txt"></label><br>
+
+    <!-- MS CİNSİNDEN SÜRE -->
+    <label>Süre (ms): <input type="number" id="timeInput" value="1000" min="50" step="50"></label><br>
+
+    <label>Yazı boyutu: <input type="number" id="fontSizeInput" value="20"></label><br>
+    <label>Pozisyon: 
+      <select id="positionSelect">
+        <option value="center">Merkez</option>
+        <option value="random">Rastgele</option>
+      </select>
+    </label><br>
+    <label>Gösterim şekli: 
+      <select id="modeSelect">
+        <option value="auto">Otomatik</option>
+        <option value="manual">Manuel (Boşluk tuşu)</option>
+      </select>
+    </label><br>
+    <button onclick="start()">Başlat</button>
+    <button onclick="stop()">Durdur</button>
+  </div>
+
+  <div id="word"></div>
+
+  <div id="inputArea">
+    <input type="text" id="userInput" placeholder="Kelimeyi yazın" autocomplete="off">
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let words = [];
+    let currentIndex = 0;
+    let intervalId = null;
+    let hideTimeout = null;
+    let currentWord = "";
+    let waitingForInput = false;
+
+    const wordDiv = document.getElementById('word');
+    const controlsDiv = document.querySelector('.controls');
+    const inputArea = document.getElementById('inputArea');
+    const userInput = document.getElementById('userInput');
+    const resultDiv = document.getElementById('result');
+
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          words = e.target.result.split(/\s+/).filter(Boolean);
+          words = shuffleArray(words);
+          currentIndex = 0;
+        };
+        reader.readAsText(file, 'UTF-8');
+      }
+    });
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function showWord(index) {
+      if (words.length === 0) return;
+      currentWord = words[index % words.length];
+      const fontSize = parseInt(document.getElementById('fontSizeInput').value);
+      wordDiv.style.fontSize = fontSize + 'px';
+      wordDiv.textContent = currentWord;
+      wordDiv.style.opacity = 1;
+
+      const positionChoice = document.getElementById('positionSelect').value;
+      if (positionChoice === 'center') {
+        wordDiv.style.left = '50%';
+        wordDiv.style.top = '50%';
+        wordDiv.style.transform = 'translate(-50%, -50%)';
+      } else {
+        wordDiv.style.transform = 'none';
+        const panelRect = controlsDiv.getBoundingClientRect();
+        const wordWidth = wordDiv.offsetWidth;
+        const wordHeight = wordDiv.offsetHeight;
+        let x, y;
+        let safe = false;
+        while (!safe) {
+          x = Math.random() * (window.innerWidth - wordWidth);
+          y = Math.random() * (window.innerHeight - wordHeight);
+          if (
+            x + wordWidth < panelRect.left ||
+            x > panelRect.right ||
+            y + wordHeight < panelRect.top ||
+            y > panelRect.bottom
+          ) safe = true;
+        }
+        wordDiv.style.left = x + 'px';
+        wordDiv.style.top = y + 'px';
+      }
+
+      const time = parseInt(document.getElementById('timeInput').value);
+
+      clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(() => {
+        wordDiv.style.opacity = 0;
+        if (document.getElementById('modeSelect').value === 'manual') {
+          askUserInput();
+        }
+      }, time);
+    }
+
+    function askUserInput() {
+      waitingForInput = true;
+      inputArea.style.display = 'block';
+      resultDiv.textContent = "";
+      userInput.value = "";
+      userInput.focus();
+    }
+
+    function normalizeText(text) {
+      return text
+        .toLowerCase()
+        .replace(/[âäàá]/g, "a")
+        .replace(/[îïìí]/g, "i")
+        .replace(/[ûùú]/g, "u")
+        .replace(/[^a-zçğıöşü\s]/g, "");
+    }
+
+    userInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && waitingForInput) {
+        const answer = userInput.value.trim();
+        waitingForInput = false;
+
+        if (normalizeText(answer) === normalizeText(currentWord)) {
+          resultDiv.textContent = "✅ Doğru!";
+          resultDiv.style.color = "green";
+        } else {
+          resultDiv.textContent = `❌ Yanlış! Doğrusu: ${currentWord}`;
+          resultDiv.style.color = "red";
+        }
+
+        setTimeout(() => {
+          inputArea.style.display = 'none';
+          resultDiv.textContent = "";
+          currentIndex++;
+          if (currentIndex < words.length) {
+            showWord(currentIndex);
+          }
+        }, 1200);
+      }
+    });
+
+    function start() {
+      stop();
+      currentIndex = 0;
+      const mode = document.getElementById('modeSelect').value;
+
+      const time = parseInt(document.getElementById('timeInput').value);
+
+      if (mode === 'auto') {
+        showWord(currentIndex++);
+        intervalId = setInterval(() => {
+          showWord(currentIndex++);
+        }, time);
+      } else if (mode === 'manual') {
+        showWord(currentIndex++);
+      }
+    }
+
+    function stop() {
+      clearInterval(intervalId);
+      clearTimeout(hideTimeout);
+      wordDiv.style.opacity = 0;
+      inputArea.style.display = 'none';
+      waitingForInput = false;
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        const mode = document.getElementById('modeSelect').value;
+        if (mode === 'manual' && !waitingForInput && words.length > 0) {
+          showWord(currentIndex++);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
