@@ -1,4 +1,4 @@
-<!-- index.html -->
+<!-- index.html (API KALDIRILMIŞ TEMİZ SÜRÜM) -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -106,42 +106,6 @@
       font-size:12px;
       color:#b00020;
     }
-
-    /* API durum alanı */
-    #apiStatusBox{
-      width:80%;
-      padding:10px;
-      margin-bottom:10px;
-      border-radius:8px;
-      font-size:14px;
-      text-align:center;
-      display:none;
-    }
-    #apiInputBox{
-      width:80%;
-      background:#fff;
-      padding:12px;
-      border-radius:10px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);
-      display:none;
-      box-sizing:border-box;
-    }
-    #apiInputBox input{
-      width:100%;
-      padding:8px;
-      margin-bottom:6px;
-      box-sizing:border-box;
-    }
-    #apiInputBox button{
-      width:100%;
-      padding:8px;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      background:#007bff;
-      color:#fff;
-      font-size:14px;
-    }
   </style>
 </head>
 <body>
@@ -169,15 +133,6 @@
     <!-- Sağ taraf (Egzersizler) -->
     <div class="right">
 
-      <!-- API Durum Paneli -->
-      <div id="apiStatusBox"></div>
-
-      <!-- API Giriş Alanı -->
-      <div id="apiInputBox">
-        <input type="text" id="apiKeyInput" placeholder="API anahtarınızı giriniz">
-        <button onclick="saveApiKey()">API Kaydet</button>
-      </div>
-
       <div class="card" onclick="window.location.href='goz.html'">
         <h2>Göz Egzersizi</h2>
       </div>
@@ -194,14 +149,11 @@
   </div>
 
 <script>
-/* ========= LİSANS KODU / KULLANICI KODU KONTROLÜ ========= */
+/* ========= KULLANICI KODU KONTROLÜ ========= */
 
 const CODE_LIST_URL = "https://ilhantopaloglu.github.io/HizliOkuma/kod.txt"; 
 // txt formatı: KOD GG.AA.YYYY GG.AA.YYYY (her satır bir kod)
 
-// API kontrolü için sabitler
-const API_CHECK_URL   = "https://api.openai.com/v1/models"; // örnek endpoint
-const API_STORAGE_KEY = "USER_API_KEY";
 const USER_CODE_KEY   = "USER_CODE";
 
 const codeOverlay    = document.getElementById("codeOverlay");
@@ -209,10 +161,6 @@ const userCodeInput  = document.getElementById("userCodeInput");
 const userCodeButton = document.getElementById("userCodeButton");
 const codeError      = document.getElementById("codeError");
 const mainContent    = document.getElementById("mainContent");
-
-const apiStatusBox = document.getElementById("apiStatusBox");
-const apiInputBox  = document.getElementById("apiInputBox");
-const apiKeyInput  = document.getElementById("apiKeyInput");
 
 userCodeInput.addEventListener("keydown", e=>{
   if(e.key === "Enter") checkUserCode();
@@ -294,7 +242,6 @@ async function checkUserCode(presetCode){
   localStorage.setItem(USER_CODE_KEY, enteredCode);
   codeOverlay.style.display = "none";
   mainContent.style.display = "flex";
-  checkApiStatus();
 }
 
 function parseTRDate(str){
@@ -306,65 +253,6 @@ function parseTRDate(str){
   const d = new Date(yil,ay,gun);
   d.setHours(0,0,0,0);
   return isNaN(d.getTime()) ? null : d;
-}
-
-/* ========= API DURUMU KONTROLÜ ========= */
-
-function checkApiStatus() {
-  const apiKey = localStorage.getItem(API_STORAGE_KEY);
-
-  apiStatusBox.style.display = "block";
-
-  if (!apiKey) {
-    showApiNotRegistered();
-    return;
-  }
-
-  fetch(API_CHECK_URL, {
-    headers: {
-      "Authorization": "Bearer " + apiKey
-    }
-  })
-  .then(res => {
-    if (res.ok) {
-      showApiRegistered();
-    } else {
-      throw new Error("API reddedildi");
-    }
-  })
-  .catch(err => {
-    console.warn(err);
-    showApiNotRegistered();
-  });
-}
-
-function showApiRegistered() {
-  apiStatusBox.style.background = "#d4edda";
-  apiStatusBox.style.color = "#155724";
-  apiStatusBox.textContent = "✅ API kayıtlı";
-  apiInputBox.style.display = "none";
-}
-
-function showApiNotRegistered() {
-  apiStatusBox.style.background = "#f8d7da";
-  apiStatusBox.style.color = "#721c24";
-  apiStatusBox.innerHTML = 
-    "❌ API kayıtlı değil.<br>" +
-    "Bilgisayar kullanıyorsanız <b><a href=\"api_kayit.html\" target=\"_blank\">api_kayit.html</a></b> sayfasını açarak API anahtarını kaydedebilirsiniz.<br>" +
-    "Cep telefonundan kullanıyorsanız API girişini bilgisayar üzerinden yapmanız önerilir.";
-  apiInputBox.style.display = "block";
-}
-
-function saveApiKey(){
-  const key = apiKeyInput.value.trim();
-  if (!key) {
-    alert("API anahtarı boş olamaz.");
-    return;
-  }
-
-  localStorage.setItem(API_STORAGE_KEY, key);
-  apiKeyInput.value = "";
-  checkApiStatus();
 }
 </script>
 
