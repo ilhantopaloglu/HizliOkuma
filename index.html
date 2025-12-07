@@ -348,7 +348,10 @@ function showApiRegistered() {
 function showApiNotRegistered() {
   apiStatusBox.style.background = "#f8d7da";
   apiStatusBox.style.color = "#721c24";
-  apiStatusBox.textContent = "❌ API kayıtlı değil";
+  apiStatusBox.innerHTML = 
+    "❌ API kayıtlı değil.<br>" +
+    "Bilgisayar kullanıyorsanız <b><a href=\"api_kayit.html\" target=\"_blank\">api_kayit.html</a></b> sayfasını açarak API anahtarını kaydedebilirsiniz.<br>" +
+    "Cep telefonundan kullanıyorsanız API girişini bilgisayar üzerinden yapmanız önerilir.";
   apiInputBox.style.display = "block";
 }
 
