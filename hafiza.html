@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Dört Kelime Testi</title>
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #eee;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  canvas {
+    border: 1px solid #333;
+    background-color: #fff;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .word-inputs {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  input[type="number"], input[type="text"] {
+    width: 120px;
+    padding: 5px;
+    font-size: 14px;
+  }
+
+  button {
+    display: inline-block;
+    width: auto;
+    max-width: 150px;
+    padding: 5px 15px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  #result {
+    font-weight: bold;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="testCanvas" width="500" height="400"></canvas>
+
+<div class="controls">
+  <div>
+    <label>Kelime listesi:
+      <select id="sourceSelect">
+        <option value="1hece">1 heceliler</option>
+        <option value="2hece">2 heceliler</option>
+        <option value="3hece">3 heceliler</option>
+      </select>
+    </label>
+    <button type="button" onclick="loadWordsFromServer()">Yükle</button>
+  </div>
+
+  <div>
+    <label>Süre(ms):</label>
+    <input type="number" id="duration" value="3000" min="100" max="5000" step="100">
+  </div>
+  <button id="startBtn" onclick="startTest()">Başlat</button>
+
+  <div class="word-inputs" id="wordInputs">
+    <input type="text" id="input0" placeholder="Kelime 1">
+    <input type="text" id="input1" placeholder="Kelime 2">
+    <input type="text" id="input2" placeholder="Kelime 3">
+    <input type="text" id="input3" placeholder="Kelime 4">
+    <button onclick="checkAnswers()">Tamam</button>
+    <div id="result"></div>
+    <button id="restartBtn" style="display:none;" onclick="resetTest()">Başa Dön</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('testCanvas');
+const ctx = canvas.getContext('2d');
+
+let words = [];
+let selectedWords = [];
+let duration = 1000;
+let timeoutId = null;
+
+const sourceSelect = document.getElementById('sourceSelect');
+
+// Sunucudaki TXT dosyalarının adresleri
+const SOURCES = {
+  "1hece": "https://ilhantopaloglu.github.io/HizliOkuma/1heceliler.txt",
+  "2hece": "https://ilhantopaloglu.github.io/HizliOkuma/2heceliler.txt",
+  "3hece": "https://ilhantopaloglu.github.io/HizliOkuma/3heceliler.txt"
+};
+
+// 🔥 100 ms aralıklı süre yuvarlama
+document.getElementById("duration").addEventListener("input", function() {
+    let val = parseInt(this.value, 10);
+    if (isNaN(val) || val < 100) val = 100;
+    if (val > 5000) val = 5000;
+    val = Math.round(val / 100) * 100;  // 🔥 100 ms'ye yuvarla
+    this.value = val;
+});
+
+async function loadWordsFromServer() {
+  const key = sourceSelect.value;
+  const url = SOURCES[key];
+  if (!url) {
+    alert("Geçersiz liste seçimi.");
+    return;
+  }
+
+  try {
+    const res = await fetch(url + "?_t=" + Date.now()); // cache kırmak için
+    if (!res.ok) throw new Error("Dosya okunamadı: " + res.status);
+    const text = await res.text();
+    words = text.split(/\s+/).map(w => w.trim()).filter(w => w !== '');
+    if (words.length < 4) {
+      alert("Seçtiğiniz dosyada en az 4 kelime olmalı.");
+      return;
+    }
+    alert("Kelime listesi yüklendi. Toplam kelime: " + words.length);
+  } catch (err) {
+    console.error(err);
+    alert("Kelime listesi yüklenirken hata: " + err.message);
+  }
+}
+
+function getCenter() {
+  return { x: canvas.width / 2, y: canvas.height / 2 };
+}
+
+function drawPlus() {
+  const { x: centerX, y: centerY } = getCenter();
+  const size = 20;
+  ctx.strokeStyle = 'black';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(centerX - size, centerY);
+  ctx.lineTo(centerX + size, centerY);
+  ctx.moveTo(centerX, centerY - size);
+  ctx.lineTo(centerX, centerY + size);
+  ctx.stroke();
+}
+
+// Kelimeler çapraz olarak + etrafında
+function drawWords(colors) {
+  if (selectedWords.length < 4) return;
+
+  ctx.font = '22px Arial';
+  ctx.textBaseline = 'middle';
+  const center = getCenter();
+  const offsetX = 50;
+  const offsetY = 40;
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = colors?.[0] || 'black';
+  ctx.fillText(selectedWords[0], center.x - offsetX, center.y - offsetY);
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = colors?.[1] || 'black';
+  ctx.fillText(selectedWords[1], center.x + offsetX, center.y - offsetY);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = colors?.[2] || 'black';
+  ctx.fillText(selectedWords[2], center.x - offsetX, center.y + offsetY);
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = colors?.[3] || 'black';
+  ctx.fillText(selectedWords[3], center.x + offsetX, center.y + offsetY);
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawPlus();
+}
+
+function startTest() {
+  const startBtn = document.getElementById('startBtn');
+  startBtn.disabled = true;
+
+  duration = parseInt(document.getElementById('duration').value, 10) || 1000;
+
+  document.getElementById('wordInputs').style.display = 'none';
+  document.getElementById('result').innerText = '';
+  document.getElementById('restartBtn').style.display = 'none';
+
+  clearTimeout(timeoutId);
+
+  if (words.length < 4) {
+    alert("Önce bir kelime listesi seçip 'Yükle' butonuna basın.");
+    startBtn.disabled = false;
+    return;
+  }
+
+  launchRound();
+}
+
+function launchRound() {
+  selectedWords = [];
+  const tempWords = [...words];
+  for (let i = 0; i < 4; i++) {
+    const idx = Math.floor(Math.random() * tempWords.length);
+    selectedWords.push(tempWords[idx]);
+    tempWords.splice(idx, 1);
+  }
+
+  clearCanvas();
+  drawWords();
+
+  clearTimeout(timeoutId);
+  timeoutId = setTimeout(() => {
+    clearCanvas();
+    showInputs();
+  }, duration);
+}
+
+function showInputs() {
+  const inputDiv = document.getElementById('wordInputs');
+  inputDiv.style.display = 'flex';
+  inputDiv.style.flexDirection = 'column';
+  document.getElementById('result').innerText = '';
+  document.getElementById('restartBtn').style.display = 'none';
+
+  for (let i = 0; i < 4; i++) {
+    const inputElem = document.getElementById('input' + i);
+    inputElem.value = '';
+    inputElem.style.color = 'black';
+  }
+
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('input0').focus();
+}
+
+function checkAnswers() {
+  const userInputs = [];
+  for (let i = 0; i < 4; i++) {
+    userInputs.push(document.getElementById('input' + i).value.trim().toLocaleLowerCase('tr'));
+  }
+
+  let correct = 0;
+  const remainingForInputs = selectedWords.map(w => w.trim().toLocaleLowerCase('tr'));
+
+  for (let i = 0; i < 4; i++) {
+    const inputElem = document.getElementById('input' + i);
+    const user = userInputs[i];
+    const idx = remainingForInputs.indexOf(user);
+
+    if (user !== "" && idx !== -1) {
+      correct++;
+      remainingForInputs.splice(idx, 1);
+      inputElem.style.color = 'green';
+    } else {
+      inputElem.style.color = 'red';
+    }
+  }
+
+  const userCopyForCanvas = userInputs.slice();
+  const colors = [];
+
+  for (let i = 0; i < 4; i++) {
+    const sw = selectedWords[i].trim().toLocaleLowerCase('tr');
+    const idx = userCopyForCanvas.indexOf(sw);
+    if (idx !== -1) {
+      colors.push('green');
+      userCopyForCanvas.splice(idx, 1);
+    } else {
+      colors.push('red');
+    }
+  }
+
+  clearCanvas();
+  drawWords(colors);
+
+  document.getElementById('result').innerText = "Doğru sayısı: " + correct + " / 4";
+  document.getElementById('restartBtn').style.display = 'inline-block';
+}
+
+function resetTest() {
+  clearTimeout(timeoutId);
+  document.getElementById('wordInputs').style.display = 'none';
+  document.getElementById('result').innerText = '';
+  selectedWords = [];
+  clearCanvas();
+  document.getElementById('startBtn').disabled = false;
+}
+
+clearCanvas();
+</script>
+
+</body>
+</html>
