@@ -12,123 +12,53 @@ body {
   margin: 0;
 }
 
-/* Ana içerik */
-#mainContent {
-  display: none;
-  flex: 1;
-}
+/* ANA */
+#mainContent { display:none; flex:1; }
 
 .left {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #fff;
-  border-right: 2px solid #ddd;
-  padding: 20px;
+  flex:1; display:flex; justify-content:center; align-items:center;
+  background:#fff; border-right:2px solid #ddd; padding:20px;
 }
-.left img {
-  max-width: 100%;
-  max-height: 80%;
-  object-fit: contain;
-}
+.left img { max-width:100%; max-height:80%; object-fit:contain; }
 
 .right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  padding: 20px;
-  overflow-y: auto;
+  flex:1; display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  gap:15px; padding:20px;
+}
+
+/* KART */
+.card {
+  width:80%; background:white; padding:20px;
+  text-align:center; border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1); cursor:pointer;
 }
 
 /* API PANEL */
 #apiPanel{
-  width:80%;
-  background:#eef3ff;
+  width:80%; background:#eef3ff;
   border:1px solid #c9d7ff;
-  border-radius:8px;
-  padding:12px;
-  margin-bottom:10px;
+  border-radius:8px; padding:12px;
 }
+#apiStatus{ font-size:13px; margin-bottom:6px; }
+#apiPanel input{ width:100%; padding:6px; margin-bottom:6px; }
+#apiPanel button{ width:100%; padding:6px; background:#007bff; color:white; border:none; }
 
-#apiStatus{
-  font-size:13px;
-  margin-bottom:6px;
-}
-
-#apiPanel input{
-  width:100%;
-  padding:6px;
-  margin-bottom:6px;
-}
-
-#apiPanel button{
-  width:100%;
-  padding:6px;
-  background:#007bff;
-  border:none;
-  color:white;
-  border-radius:4px;
-  cursor:pointer;
-}
-
-/* Kart */
-.card {
-  width: 80%;
-  background: white;
-  padding: 20px;
-  text-align: center;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  cursor: pointer;
-}
-.card:hover {
-  transform: translateY(-4px);
-}
-.card h2 {
-  font-size: 18px;
-  margin: 0;
-  color: #333;
-}
-
-/* Kullanıcı kodu */
+/* KOD PANEL */
 #codeOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.5);
+  display:none; align-items:center; justify-content:center;
 }
-#codeBox{
-  background:#ffffff;
-  padding:20px;
-  border-radius:8px;
-  max-width:320px;
-  width:90%;
-}
-#codeBox input{
-  width:100%;
-  padding:8px;
-  margin-bottom:8px;
-}
-#codeBox button{
-  width:100%;
-  padding:8px;
-  background:#007bff;
-  border:none;
-  color:white;
-}
-#codeError{font-size:12px;color:red;}
+#codeBox{ background:white; padding:20px; border-radius:8px; max-width:320px; }
+#codeBox input{ width:100%; padding:8px; margin-bottom:8px; }
+#codeBox button{ width:100%; padding:8px; background:#007bff; color:white; border:none; }
+#codeError{ font-size:12px; color:red; }
 </style>
 </head>
 <body>
 
-<!-- KULLANICI KOD -->
+<!-- KULLANICI KODU -->
 <div id="codeOverlay">
 <div id="codeBox">
 <h2>Kullanıcı Kodu</h2>
@@ -138,45 +68,40 @@ body {
 </div>
 </div>
 
-<!-- ANA EKRAN -->
+<!-- ANA -->
 <div id="mainContent">
 
-<!-- SOL -->
 <div class="left">
-<img src="Logo.jpg">
+  <img src="Logo.jpg">
 </div>
 
-<!-- SAĞ -->
 <div class="right">
 
 <!-- API PANEL -->
 <div id="apiPanel">
-  <div id="apiStatus">API durumu kontrol ediliyor...</div>
-  <input id="apiInput" placeholder="OpenAI API Key" type="password">
-  <button onclick="checkAPI()">API Doğrula</button>
+<div id="apiStatus">API girilmedi</div>
+<input id="apiInput" placeholder="OpenAI API Anahtarı" type="password">
+<button onclick="checkAPI()">API Doğrula</button>
 </div>
 
-<div class="card" onclick="openIfAPI('goz.html')"><h2>Göz Egzersizi</h2></div>
-<div class="card" onclick="openIfAPI('kelime.html')"><h2>Kelime Çalışması</h2></div>
-<div class="card" onclick="openIfAPI('blok.html')"><h2>Blok Metin</h2></div>
-<div class="card" onclick="openIfAPI('hafiza.html')"><h2>Hafıza Oyunu</h2></div>
+<div class="card" onclick="openIfAPI('goz.html')">Göz Egzersizi</div>
+<div class="card" onclick="openIfAPI('kelime.html')">Kelime Çalışması</div>
+<div class="card" onclick="openIfAPI('blok.html')">Blok Metin</div>
+<div class="card" onclick="openIfAPI('hafiza.html')">Hafıza Oyunu</div>
 
 </div>
 </div>
 
 <script>
-/* ==== AYAR ==== */
+/* ==== AYARLAR ==== */
 const CODE_LIST_URL = "https://ilhantopaloglu.github.io/HizliOkuma/kod.txt";
-const API_CHECK_URL = "http://localhost:3000/api-check";
-
 const USER_CODE_KEY = "USER_CODE";
-const API_KEY      = "OPENAI_KEY";
+const API_KEY_NAME  = "OPENAI_KEY";
 
+const apiStatus = document.getElementById("apiStatus");
+const apiInput  = document.getElementById("apiInput");
 const codeOverlay = document.getElementById("codeOverlay");
-const codeError   = document.getElementById("codeError");
-const apiStatus   = document.getElementById("apiStatus");
-const apiInput    = document.getElementById("apiInput");
-const mainContent = document.getElementById("mainContent");
+const codeError = document.getElementById("codeError");
 
 /* ==== AÇILIŞ ==== */
 document.addEventListener("DOMContentLoaded", ()=>{
@@ -184,11 +109,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   if(code) checkUserCode(code);
   else codeOverlay.style.display="flex";
 
-  const savedAPI = localStorage.getItem(API_KEY);
-  if(savedAPI){
-    apiInput.value = savedAPI;
-    checkAPI(true);
-  }
+  const api = localStorage.getItem(API_KEY_NAME);
+  if(api){ apiInput.value=api; checkAPI(true); }
 });
 
 /* ==== KOD KONTROL ==== */
@@ -197,10 +119,9 @@ async function checkUserCode(preset){
   let txt;
 
   try{
-    const r = await fetch(CODE_LIST_URL+"?t="+Date.now());
-    txt = await r.text();
+    txt = await (await fetch(CODE_LIST_URL+"?t="+Date.now())).text();
   }catch{
-    codeError.textContent="Kod listesi okunamadı.";
+    codeError.textContent="Kod dosyası okunamadı";
     return;
   }
 
@@ -218,13 +139,13 @@ async function checkUserCode(preset){
   if(!ok){
     localStorage.removeItem(USER_CODE_KEY);
     codeOverlay.style.display="flex";
-    codeError.textContent="Kod geçersiz.";
+    codeError.textContent="Kod geçersiz";
     return;
   }
 
-  localStorage.setItem(USER_CODE_KEY, entered);
+  localStorage.setItem(USER_CODE_KEY,entered);
   codeOverlay.style.display="none";
-  mainContent.style.display="flex";
+  document.getElementById("mainContent").style.display="flex";
 }
 
 /* ==== TARİH ==== */
@@ -237,44 +158,39 @@ function parseDate(t){
 /* ==== API DOĞRULA ==== */
 async function checkAPI(silent=false){
   const key=apiInput.value.trim();
-  if(!key){ if(!silent) setStatus("API girilmedi","red"); return;}
+  if(!key){ if(!silent) setStatus("API girilmedi","red"); return; }
 
-  setStatus("API kontrol ediliyor...","blue");
+  setStatus("API kontrol ediliyor...", "blue");
 
   try{
-    const r=await fetch(API_CHECK_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({apiKey:key})
+    const r=await fetch("https://api.openai.com/v1/models",{
+      headers:{ "Authorization":"Bearer "+key }
     });
-    const d=await r.json();
 
-    if(d.ok){
-      localStorage.setItem(API_KEY,key);
-      setStatus("✅ API Kayıtlı","green");
+    if(r.ok){
+      localStorage.setItem(API_KEY_NAME,key);
+      setStatus("✅ API geçerli","green");
     }else{
-      localStorage.removeItem(API_KEY);
-      setStatus("❌ API Hatalı","red");
+      localStorage.removeItem(API_KEY_NAME);
+      setStatus("❌ API geçersiz","red");
     }
+
   }catch{
-    setStatus("⚠ Backend bağlantı yok","orange");
+    setStatus("⚠ Bağlantı hatası","orange");
   }
 }
 
-function setStatus(txt,color){
-  apiStatus.textContent=txt;
-  apiStatus.style.color=color;
-}
+function setStatus(t,c){ apiStatus.textContent=t; apiStatus.style.color=c; }
 
-/* ==== KONTROL ==== */
+/* ==== SAYFA AÇ ==== */
 function openIfAPI(page){
-  if(!localStorage.getItem(API_KEY)){
-    alert("API doğrulanmadan devam edemezsin");
+  if(!localStorage.getItem(API_KEY_NAME)){
+    alert("Önce API doğrula");
     return;
   }
   window.location.href=page;
 }
-
 </script>
+
 </body>
 </html>
