@@ -162,10 +162,27 @@ body{
 
       <div class="section">
         <h3>2) Metin</h3>
-        <label>Yaş</label>
-        <input type="number" id="ageInput">
+        <label>Yaş Aralığı</label>
+        <select id="ageGroupInput">
+          <option value="">Seçiniz</option>
+          <option value="7-9">7-9</option>
+          <option value="10-12">10-12</option>
+          <option value="13-15">13-15</option>
+          <option value="16-18">16-18</option>
+          <option value="18+">18+</option>
+        </select>
+
+        <label>Zorluk Seviyesi</label>
+        <select id="levelInput">
+          <option value="">Seçiniz</option>
+          <option value="kolay">Kolay</option>
+          <option value="orta">Orta</option>
+          <option value="zor">Zor</option>
+        </select>
+
         <label>Konu</label>
-        <input type="text" id="topicInput">
+        <input type="text" id="topicInput" placeholder="Örn: Güneş Sistemi">
+
         <button class="primary" id="generateTextBtn">Metin Oluştur</button>
         <div id="generateStatus" style="font-size:11px;margin-top:4px;"></div>
       </div>
@@ -230,9 +247,132 @@ function updateApiStatusLine(){
 
 updateApiStatusLine();
 
+/* ========= YAŞ + ZORLUK İÇİN YARDIMCI KURALLAR ========= */
+
+function getTextLevelRules(ageGroup, level){
+  let base = "";
+  switch(ageGroup){
+    case "7-9":
+      base =
+`- Dil ilkokul 2-3. sınıf düzeyinde sade ve anlaşılır olsun.
+- Kısa ve basit cümleler kullan, karmaşık yan cümleciklerden kaçın.
+- Somut örnekler ver; soyut kavram gerekiyorsa kısaca açıkla.`;
+      break;
+    case "10-12":
+      base =
+`- Dil ilkokul 4 ve ortaokul 1. sınıf düzeyinde olsun.
+- Orta uzunlukta cümleler kullan; çok karmaşık yapılar kurma.
+- Yeni kavramları basit tanımlarla açıkla.`;
+      break;
+    case "13-15":
+      base =
+`- Dil ortaokul 2-3. sınıf düzeyinde olsun.
+- Orta–uzun cümleler kullanabilirsin.
+- Soyut kavramları kullanırken kısa açıklamalar ekle.`;
+      break;
+    case "16-18":
+      base =
+`- Dil lise düzeyinde olsun.
+- Daha uzun ve bağlantılı cümleler kullanabilirsin.
+- Gerekli yerlerde terim kullan ama kısaca tanımla.`;
+      break;
+    case "18+":
+      base =
+`- Dil yetişkin/üniversite düzeyinde olabilir.
+- Konuyu derinlemesine ve akıcı bir dille işle.
+- Gerekli yerlerde teknik kavramlara yer verebilirsin.`;
+      break;
+    default:
+      base =
+`- Dil sade ve anlaşılır olsun.
+- Cümleler çok karmaşık olmasın.`;
+  }
+
+  let levelRule = "";
+  switch(level){
+    case "kolay":
+      levelRule =
+`- Zorluk seviyesi KOLAY olsun: daha kısa cümleler, daha sık tekrarlar ve temel kavramlara odaklan.
+- Çok fazla yeni kelime kullanma; kullanırsan hemen ardından kısa açıklama ekle.`;
+      break;
+    case "orta":
+      levelRule =
+`- Zorluk seviyesi ORTA olsun: cümle uzunlukları orta düzeyde olsun.
+- Bazı yeni kelimeler ve kavramlar kullan; anlamları metin içinde anlaşılabilir olsun.`;
+      break;
+    case "zor":
+      levelRule =
+`- Zorluk seviyesi ZOR olsun: daha uzun ve bağlantılı cümleler kullan.
+- Konuyu daha derinlemesine işle; gerektiğinde terimler kullan ama kısaca tanımla.`;
+      break;
+    default:
+      levelRule = "";
+  }
+
+  return base + "\n" + levelRule;
+}
+
+function getQuestionLevelRules(ageGroup, level){
+  let base = "";
+  switch(ageGroup){
+    case "7-9":
+      base =
+`- Sorular ilkokul 2-3. sınıf düzeyinde, kısa ve sade olsun.
+- Soru kökleri çok uzun olmasın, tek bir fikir sorsun.`;
+      break;
+    case "10-12":
+      base =
+`- Sorular ilkokul 4 ve ortaokul 1. sınıf düzeyinde olsun.
+- Hem detay hem ana fikir soruları içerebilir.`;
+      break;
+    case "13-15":
+      base =
+`- Sorular ortaokul düzeyinde olsun.
+- Bazı sorular yorum gerektirebilir, ama metne dayalı kalsın.`;
+      break;
+    case "16-18":
+      base =
+`- Sorular lise düzeyinde olsun.
+- Yorum ve çıkarım gerektiren sorulara da yer ver.`;
+      break;
+    case "18+":
+      base =
+`- Sorular yetişkin/üniversite düzeyinde olabilir.
+- Yorum ve analiz gerektiren sorular sorabilirsin.`;
+      break;
+    default:
+      base =
+`- Sorular metne dayalı ve anlaşılır olsun.`;
+  }
+
+  let levelRule = "";
+  switch(level){
+    case "kolay":
+      levelRule =
+`- Zorluk seviyesi KOLAY olsun: daha çok doğrudan metinde geçen bilgiyi sorsun.
+- Çeldirici şıklar çok karmaşık olmasın.`;
+      break;
+    case "orta":
+      levelRule =
+`- Zorluk seviyesi ORTA olsun: hem doğrudan bilgi hem de basit çıkarım soruları içersin.
+- Çeldiriciler mantıklı ama ayırt edilebilir olsun.`;
+      break;
+    case "zor":
+      levelRule =
+`- Zorluk seviyesi ZOR olsun: detay ve yorum soruları daha fazla olsun.
+- Çeldiriciler metne kısmen dayalı, dikkat gerektiren türden olsun.`;
+      break;
+    default:
+      levelRule = "";
+  }
+
+  return base + "\n" + levelRule;
+}
+
 /* ========= METİN OLUŞTURMA (ChatGPT) ========= */
 
-const ageInput        = document.getElementById("ageInput");
+const ageGroupInput   = document.getElementById("ageGroupInput");
+const levelInput      = document.getElementById("levelInput");
 const topicInput      = document.getElementById("topicInput");
 const generateTextBtn = document.getElementById("generateTextBtn");
 const generateStatus  = document.getElementById("generateStatus");
@@ -259,10 +399,12 @@ async function generateTextFromAPI(){
     return;
   }
 
-  const age   = ageInput.value.trim();
-  const topic = topicInput.value.trim();
-  if(!age || !topic){
-    alert("Yaş ve konu giriniz.");
+  const ageGroup = ageGroupInput.value;
+  const level    = levelInput.value;
+  const topic    = topicInput.value.trim();
+
+  if(!ageGroup || !level || !topic){
+    alert("Yaş aralığı, zorluk seviyesi ve konu giriniz.");
     return;
   }
 
@@ -279,19 +421,23 @@ async function generateTextFromAPI(){
   userAnswers = [];
   finishBtn.style.display = "none";
 
+  const levelRules = getTextLevelRules(ageGroup, level);
+
   const prompt = `
-Yaş: ${age}
-Konu: ${topic}
+${ageGroup} yaş aralığındaki bir öğrenci için, "${topic}" konusunda Türkçe bir öğretici metin yaz.
 
-Türkçe, yaşa uygun yaklaşık 500 kelimelik öğretici bir metin üret.
+Genel kurallar:
+- Yaklaşık 400–500 kelime olsun.
+- Başlık mutlaka olsun.
+- Markdown formatı kullanma.
+- Liste, madde imi, kod bloğu kullanma.
+- BAŞLIKTA VE METİNDE ASLA '#' KARAKTERİ KULLANMA.
+- Metin normal paragraf yapısında olsun.
 
-Kurallar:
-- Başlık mutlaka olsun
-- BAŞLIKTA VE METİNDE ASLA '#' KARAKTERİ KULLANMA
-- Markdown formatı kullanma
-- Liste, madde imi, kod bloğu olmasın
-- Metin normal paragraf yapısında olsun
-- En sonda kısa bir kapanış cümlesi yaz
+Yaş ve zorluk kuralları:
+${levelRules}
+
+En sonda kısa bir kapanış cümlesi yaz.
 `;
 
   try{
@@ -310,8 +456,9 @@ Kurallar:
     });
 
     const data = await res.json();
-    let raw = data.choices[0].message.content || "";
+    let raw = data.choices?.[0]?.message?.content || "";
 
+    // Olası baştaki markdown başlık kalıntılarını temizle
     raw = raw.replace(/^#+\s*/gm,"");
 
     rawText = raw;
@@ -514,15 +661,23 @@ async function generateQuestionsForText(){
 
   questionContainer.innerHTML = "Sorular hazırlanıyor...";
 
-  const prompt = `
-Aşağıdaki metne göre Türkçe 10 adet okuduğunu anlama sorusu hazırla.
+  const ageGroup = ageGroupInput.value;
+  const level    = levelInput.value;
+  const levelRules = getQuestionLevelRules(ageGroup, level);
 
-Kurallar:
+  const prompt = `
+${ageGroup || "belirsiz"} yaş aralığındaki bir öğrenci için, aşağıdaki metne göre Türkçe 10 adet okuduğunu anlama sorusu hazırla.
+
+Genel kurallar:
 - Her soru için A, B, C, D ve E şıkları olsun.
 - Şıklar kısa ve net olsun.
 - Cevaplar sadece metne dayalı olsun.
 - Doğru şık harfleri mümkün olduğunca eşit dağılmış olsun; 10 soruda her harf (A,B,C,D,E) tercihen 2 kere doğru cevap olsun.
-- Çıkış kesinlikle sadece JSON olsun, JSON dışında açıklama yazma.
+
+Yaş ve zorluk kuralları:
+${levelRules}
+
+Çıkış kesinlikle sadece JSON olsun, JSON dışında açıklama yazma.
 
 Metin:
 """${rawText}"""
@@ -555,7 +710,7 @@ JSON formatı tam olarak şöyle olsun:
     });
 
     const data = await res.json();
-    let text = data.choices[0].message.content || "";
+    let text = data.choices?.[0]?.message?.content || "";
 
     const idx = text.indexOf("{");
     if(idx > 0) text = text.slice(idx);
@@ -604,7 +759,6 @@ function renderQuestions(){
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "optionBtn";
-      // A, B, C, D, E sırayla
       btn.textContent = letters[oi] + ") " + optText;
       btn.dataset.questionIndex = qi;
       btn.dataset.optionIndex   = oi;
