@@ -106,7 +106,7 @@
     }
     .code-wrapper input{
       width:100%;
-      padding:10px 44px 10px 10px; /* sağa ikon boşluğu */
+      padding:10px 44px 10px 10px;
       font-size:16px;
       border:1px solid #ccc;
       border-radius:8px;
@@ -157,7 +157,6 @@
       color:#b91c1c;
       min-height:18px;
     }
-
     .mini{
       margin-top:10px;
       font-size:12px;
@@ -185,14 +184,13 @@
       </div>
 
       <div id="msg"></div>
-      <div class="mini">Not: Kod doğruysa tarayıcıda kaydedilir ve bir sonraki girişte tekrar sorulmayabilir.</div>
+      <div class="mini">Not: Kod doğruysa tarayıcıda kaydedilir; sonraki girişte tekrar sorulmayabilir.</div>
     </div>
   </div>
 
   <!-- ANA SAYFA İÇERİK -->
   <div id="mainContent">
     <div class="left">
-      <!-- LOGO -->
       <img src="https://ilhantopaloglu.github.io/HizliOkuma/logo.png" alt="Logo" onerror="this.style.display='none'">
     </div>
 
@@ -223,11 +221,9 @@
   const KOD_TXT_URL = "https://ilhantopaloglu.github.io/HizliOkuma/kod.txt";
   const STORAGE_KEY = "USER_CODE";
 
-  // Sayfa açılışında: kayıtlı kod varsa otomatik dene
   window.addEventListener("DOMContentLoaded", () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && saved.trim()) {
-      // overlay'i kapatma: önce doğrula
       document.getElementById("userCode").value = saved;
       checkUserCode(true);
     }
@@ -260,24 +256,17 @@
     localStorage.removeItem(STORAGE_KEY);
     document.getElementById("userCode").value = "";
     showMsg("Kayıtlı kod temizlendi. Lütfen tekrar giriş yapın.", false);
-    // overlay zaten açık, main kapalı kalsın
     document.getElementById("mainContent").style.display = "none";
     document.getElementById("overlay").style.display = "flex";
   }
 
-  // kod.txt format önerisi:
-  // KOD;2025-01-01;2025-12-31
-  // Örn: ABC123;2025-01-01;2025-12-31
-  //
-  // Not: Tarih alanı yoksa sadece kod kontrolü de çalışır (eşleşme yeter)
+  // Bu sürüm: hem "JEDI77 01.11.2025 31.12.9999" (boşluklu, TR tarih)
+  // hem "JEDI77;2025-11-01;9999-12-31" (ayraçlı, ISO tarih) formatını okur.
   async function checkUserCode(isAuto=false){
     const input = document.getElementById("userCode");
     const code = (input.value || "").trim();
 
-    if (!code) {
-      showMsg("Lütfen kullanıcı kodunu giriniz.");
-      return;
-    }
+    if (!code) { showMsg("Lütfen kullanıcı kodunu giriniz."); return; }
 
     showMsg(isAuto ? "Kayıtlı kod kontrol ediliyor..." : "Kontrol ediliyor...", false);
 
@@ -290,47 +279,24 @@
 
       const now = new Date();
       let matched = false;
-      let valid   = false;
+      let valid = false;
 
-      for (const line of lines) {
-        // satır yorum ise geç
-        if (line.startsWith("#") || line.startsWith("//")) continue;
+      for (const rawLine of lines) {
+        if (rawLine.startsWith("#") || rawLine.startsWith("//")) continue;
 
-        // ayırıcı ; veya , olabilir
-        const parts = line.split(/[;,]/).map(s => s.trim()).filter(Boolean);
-        const fileCode = (parts[0] || "").trim();
+        const parsed = parseKodLine(rawLine);
+        if (!parsed) continue;
 
-        if (!fileCode) continue;
-
-        if (fileCode === code) {
+        if (parsed.code === code) {
           matched = true;
 
           // tarih yoksa sadece eşleşme yeter
-          if (parts.length < 3) {
-            valid = true;
-            break;
-          }
-
-          const startStr = parts[1];
-          const endStr   = parts[2];
-
-          const start = parseISODate(startStr);
-          const end   = parseISODate(endStr);
-
-          // tarih parse edilemediyse, yine de eşleşmeyi kabul etmeyelim (daha güvenli)
-          if (!start || !end) {
-            valid = false;
-            break;
-          }
+          if (!parsed.start || !parsed.end) { valid = true; break; }
 
           // bitiş gününü gün sonuna kadar geçerli say
-          end.setHours(23,59,59,999);
+          parsed.end.setHours(23,59,59,999);
 
-          if (now >= start && now <= end) {
-            valid = true;
-          } else {
-            valid = false;
-          }
+          valid = (now >= parsed.start && now <= parsed.end);
           break;
         }
       }
@@ -347,7 +313,6 @@
         return;
       }
 
-      // geçerli -> kaydet ve içeriği aç
       localStorage.setItem(STORAGE_KEY, code);
       showMsg("Kod doğrulandı. Hoş geldiniz!", false);
       showMain();
@@ -358,8 +323,49 @@
     }
   }
 
+  function parseKodLine(line){
+    // 1) Önce ; veya , ile ayrılmış mı? (JEDI77;2025-11-01;9999-12-31)
+    let parts = line.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+
+    // Eğer ayraçlı değilse, boşlukla ayrılmıştır (JEDI77 01.11.2025 31.12.9999)
+    if (parts.length === 1) {
+      parts = line.split(/\s+/).map(s => s.trim()).filter(Boolean);
+    }
+
+    if (!parts.length) return null;
+
+    const code = (parts[0] || "").trim();
+    if (!code) return null;
+
+    // Tarihler opsiyonel
+    const startStr = parts[1];
+    const endStr   = parts[2];
+
+    if (!startStr || !endStr) {
+      return { code, start: null, end: null };
+    }
+
+    // İki formatı da parse etmeyi dene
+    const start = parseDateFlexible(startStr);
+    const end   = parseDateFlexible(endStr);
+
+    // tarih parse edilemezse: kodu eşleştirme var ama tarih geçersiz say
+    return { code, start, end };
+  }
+
+  function parseDateFlexible(s){
+    // ISO: YYYY-MM-DD
+    let d = parseISODate(s);
+    if (d) return d;
+
+    // TR: DD.MM.YYYY
+    d = parseTRDate(s);
+    if (d) return d;
+
+    return null;
+  }
+
   function parseISODate(s){
-    // "YYYY-MM-DD" beklenir
     if (!s) return null;
     const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!m) return null;
@@ -371,11 +377,21 @@
     return dt;
   }
 
-  // Enter ile giriş
+  function parseTRDate(s){
+    if (!s) return null;
+    const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (!m) return null;
+    const d  = Number(m[1]);
+    const mo = Number(m[2]) - 1;
+    const y  = Number(m[3]);
+    const dt = new Date(y, mo, d);
+    if (isNaN(dt.getTime())) return null;
+    return dt;
+  }
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && document.getElementById("overlay").style.display !== "none") {
-      checkUserCode(false);
-    }
+    const overlayVisible = document.getElementById("overlay").style.display !== "none";
+    if (e.key === "Enter" && overlayVisible) checkUserCode(false);
   });
 </script>
 
