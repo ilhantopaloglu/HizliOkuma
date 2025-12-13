@@ -1,265 +1,382 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Hızlı Okuma ve Alıştırmalar</title>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  display: flex;
-  height: 100vh;
-  margin: 0;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hızlı Okuma ve Alıştırmalar</title>
 
-/* ANA İÇERİK */
-#mainContent {
-  display:none;
-  flex:1;
-}
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#f5f5f5;
+      display:flex;
+      height:100vh;
+      margin:0;
+    }
 
-.left {
-  flex:1;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:#fff;
-  border-right:2px solid #ddd;
-  padding:20px;
-}
-.left img {
-  max-width:100%;
-  max-height:80%;
-  object-fit:contain;
-}
+    /* ANA İÇERİK */
+    #mainContent{
+      display:none;
+      flex:1;
+    }
 
-.right {
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:15px;
-  padding:20px;
-  overflow-y:auto;
-}
+    .left{
+      flex:1;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#fff;
+      border-right:2px solid #ddd;
+      padding:20px;
+    }
+    .left img{
+      max-width:100%;
+      max-height:80%;
+      object-fit:contain;
+    }
 
-/* KARTLAR */
-.card {
-  width:80%;
-  background:white;
-  padding:20px;
-  text-align:center;
-  border-radius:12px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
-  cursor:pointer;
-  transition:transform 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-  transform:translateY(-4px);
-  box-shadow:0 6px 15px rgba(0,0,0,0.2);
-}
-.card h2 {
-  font-size:18px;
-  margin:0;
-  color:#333;
-}
+    .right{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:14px;
+      padding:20px;
+    }
 
-/* KULLANICI KODU OVERLAY */
-#codeOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
-#codeBox{
-  background:#ffffff;
-  padding:20px 25px;
-  border-radius:8px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.3);
-  max-width:320px;
-  width:90%;
-  box-sizing:border-box;
-}
-#codeBox h2{
-  margin-top:0;
-  margin-bottom:10px;
-  font-size:18px;
-}
-#codeBox input{
-  width:100%;
-  padding:8px;
-  margin-bottom:8px;
-  box-sizing:border-box;
-}
-#codeBox button{
-  width:100%;
-  padding:8px;
-  border:none;
-  border-radius:4px;
-  cursor:pointer;
-  background:#007bff;
-  color:white;
-  font-size:14px;
-}
-#codeError{
-  margin-top:6px;
-  font-size:12px;
-  color:#b00020;
-}
-</style>
+    .card{
+      width:min(420px, 92%);
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:10px;
+      padding:14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      cursor:pointer;
+      transition: transform .08s ease, box-shadow .08s ease;
+      text-align:left;
+    }
+    .card:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+    .card h3{
+      margin:0 0 6px 0;
+      font-size:16px;
+    }
+    .card p{
+      margin:0;
+      color:#555;
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    /* KOD OVERLAY */
+    #overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.55);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:9999;
+    }
+    #overlayBox{
+      width:min(520px, 92%);
+      background:#fff;
+      border-radius:12px;
+      padding:18px 18px 14px 18px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+    }
+    #overlayBox h2{
+      margin:0 0 8px 0;
+      font-size:18px;
+    }
+    #overlayBox p{
+      margin:0 0 12px 0;
+      color:#444;
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    .code-wrapper{
+      position:relative;
+      width:100%;
+      margin-top:6px;
+    }
+    .code-wrapper input{
+      width:100%;
+      padding:10px 44px 10px 10px; /* sağa ikon boşluğu */
+      font-size:16px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      box-sizing:border-box;
+      outline:none;
+    }
+    .code-wrapper input:focus{
+      border-color:#888;
+    }
+
+    #toggleCode{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      cursor:pointer;
+      font-size:18px;
+      user-select:none;
+      opacity:0.65;
+    }
+    #toggleCode:hover{ opacity:1; }
+
+    .btnRow{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      justify-content:flex-end;
+    }
+    button{
+      padding:10px 12px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    #btnCheck{
+      background:#2563eb;
+      color:#fff;
+    }
+    #btnReset{
+      background:#e5e7eb;
+      color:#111827;
+    }
+
+    #msg{
+      margin-top:10px;
+      font-size:13px;
+      color:#b91c1c;
+      min-height:18px;
+    }
+
+    .mini{
+      margin-top:10px;
+      font-size:12px;
+      color:#6b7280;
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- Kullanıcı Kodu Giriş Ekranı -->
-<div id="codeOverlay">
-  <div id="codeBox">
-    <h2>Kullanıcı Kodu Girişi</h2>
-    <p style="font-size:12px;margin-top:0;margin-bottom:8px;">
-      Lütfen size verilen kullanıcı kodunu girin.
-    </p>
-    <input type="text" id="userCodeInput" placeholder="Örn: ABC123">
-    <button id="userCodeButton">Giriş Yap</button>
-    <div id="codeError"></div>
-  </div>
-</div>
+  <!-- KULLANICI KODU OVERLAY -->
+  <div id="overlay">
+    <div id="overlayBox">
+      <h2>Kullanıcı Kodu</h2>
+      <p>Devam etmek için kullanıcı kodunuzu giriniz.</p>
 
-<!-- Ana içerik (başta gizli, kod doğruysa açılacak) -->
-<div id="mainContent">
-  <!-- Sol taraf (Logo/Resim) -->
-  <div class="left">
-    <img src="Logo.jpg" alt="Kronos Logo">
-  </div>
+      <div class="code-wrapper">
+        <input type="password" id="userCode" placeholder="Kullanıcı kodunu giriniz" autocomplete="off" />
+        <span id="toggleCode" title="Göster/Gizle" onclick="toggleCodeVisibility()">👁</span>
+      </div>
 
-  <!-- Sağ taraf (Egzersizler) -->
-  <div class="right">
+      <div class="btnRow">
+        <button id="btnReset" type="button" onclick="clearSavedCode()">Sıfırla</button>
+        <button id="btnCheck" type="button" onclick="checkUserCode()">Giriş</button>
+      </div>
 
-    <div class="card" onclick="openPage('goz.html')">
-      <h2>Göz Egzersizi</h2>
-    </div>
-    <div class="card" onclick="openPage('kelime.html')">
-      <h2>Kelime Çalışması</h2>
-    </div>
-    <div class="card" onclick="openPage('blok.html')">
-      <h2>Blok Metin Çalışması</h2>
-    </div>
-    <div class="card" onclick="openPage('hafiza.html')">
-      <h2>Hafıza Oyunu</h2>
+      <div id="msg"></div>
+      <div class="mini">Not: Kod doğruysa tarayıcıda kaydedilir ve bir sonraki girişte tekrar sorulmayabilir.</div>
     </div>
   </div>
-</div>
+
+  <!-- ANA SAYFA İÇERİK -->
+  <div id="mainContent">
+    <div class="left">
+      <!-- LOGO -->
+      <img src="https://ilhantopaloglu.github.io/HizliOkuma/logo.png" alt="Logo" onerror="this.style.display='none'">
+    </div>
+
+    <div class="right">
+      <div class="card" onclick="location.href='Uygulamalar/blok.html'">
+        <h3>Blok Okuma</h3>
+        <p>Blok okuma alıştırmaları ve metin üretme ekranı.</p>
+      </div>
+
+      <div class="card" onclick="location.href='Uygulamalar/kelime.html'">
+        <h3>Kelime Çalışması</h3>
+        <p>Kelime gösterimi, hız ve odak çalışmaları.</p>
+      </div>
+
+      <div class="card" onclick="location.href='Uygulamalar/goz.html'">
+        <h3>Göz Egzersizi</h3>
+        <p>Odak ve takip egzersizleri.</p>
+      </div>
+
+      <div class="card" onclick="location.href='Uygulamalar/quiz.html'">
+        <h3>Anlama Testi</h3>
+        <p>Okuma sonrası sorular ile anlama takibi.</p>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* ========= AYARLAR ========= */
-const CODE_LIST_URL = "https://ilhantopaloglu.github.io/HizliOkuma/kod.txt";
-// txt formatı: KOD GG.AA.YYYY GG.AA.YYYY (her satır bir kod)
+  const KOD_TXT_URL = "https://ilhantopaloglu.github.io/HizliOkuma/kod.txt";
+  const STORAGE_KEY = "USER_CODE";
 
-const USER_CODE_KEY = "USER_CODE";
+  // Sayfa açılışında: kayıtlı kod varsa otomatik dene
+  window.addEventListener("DOMContentLoaded", () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && saved.trim()) {
+      // overlay'i kapatma: önce doğrula
+      document.getElementById("userCode").value = saved;
+      checkUserCode(true);
+    }
+  });
 
-const codeOverlay    = document.getElementById("codeOverlay");
-const userCodeInput  = document.getElementById("userCodeInput");
-const userCodeButton = document.getElementById("userCodeButton");
-const codeError      = document.getElementById("codeError");
-const mainContent    = document.getElementById("mainContent");
-
-/* ========= SAYFA AÇILIŞ ========= */
-document.addEventListener("DOMContentLoaded", () => {
-  // Kullanıcı kodu kontrolü
-  const storedCode = localStorage.getItem(USER_CODE_KEY);
-  if (storedCode && storedCode.trim() !== "") {
-    checkUserCode(storedCode);
-  } else {
-    codeOverlay.style.display = "flex";
-  }
-});
-
-/* ========= KULLANICI KODU KONTROLÜ ========= */
-userCodeInput.addEventListener("keydown", e=>{
-  if(e.key === "Enter") checkUserCode();
-});
-userCodeButton.addEventListener("click", () => checkUserCode());
-
-async function checkUserCode(presetCode){
-  const fromStored  = typeof presetCode === "string";
-  const enteredCode = fromStored ? presetCode.trim() : userCodeInput.value.trim();
-  if (!fromStored) {
-    codeError.textContent = "";
-  }
-
-  if(!enteredCode){
-    if (!fromStored) codeError.textContent = "Lütfen bir kullanıcı kodu girin.";
-    return;
-  }
-
-  let listText;
-  try{
-    const res = await fetch(CODE_LIST_URL + "?_t=" + Date.now());
-    if(!res.ok) throw new Error("kod listesi alınamadı");
-    listText = await res.text();
-  }catch(err){
-    console.error(err);
-    codeOverlay.style.display = "flex";
-    if (!fromStored) codeError.textContent = "Kod listesine ulaşılamadı. Lütfen daha sonra tekrar deneyin.";
-    return;
-  }
-
-  const lines = listText.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0);
-  const now   = new Date();
-  now.setHours(0,0,0,0);
-
-  let foundValid = false;
-
-  for(const line of lines){
-    const parts = line.split(/\s+/);
-    if(parts.length < 3) continue;
-
-    const code   = parts[0];
-    const startS = parts[1];
-    const endS   = parts[2];
-
-    if(code.toUpperCase() !== enteredCode.toUpperCase()) continue;
-
-    const startDate = parseTRDate(startS);
-    const endDate   = parseTRDate(endS);
-    if(!startDate || !endDate) continue;
-
-    if(startDate <= now && now <= endDate){
-      foundValid = true;
-      break;
+  function toggleCodeVisibility(){
+    const input = document.getElementById("userCode");
+    const icon  = document.getElementById("toggleCode");
+    if (input.type === "password") {
+      input.type = "text";
+      icon.textContent = "🙈";
+    } else {
+      input.type = "password";
+      icon.textContent = "👁";
     }
   }
 
-  if(!foundValid){
-    localStorage.removeItem(USER_CODE_KEY);
-    codeOverlay.style.display = "flex";
-    if (!fromStored) codeError.textContent = "Kod geçersiz veya kullanım tarihi bitmiş.";
-    return;
+  function showMsg(text, isError=true){
+    const msg = document.getElementById("msg");
+    msg.style.color = isError ? "#b91c1c" : "#065f46";
+    msg.textContent = text || "";
   }
 
-  localStorage.setItem(USER_CODE_KEY, enteredCode);
-  codeOverlay.style.display = "none";
-  mainContent.style.display = "flex";
-}
+  function showMain(){
+    document.getElementById("overlay").style.display = "none";
+    document.getElementById("mainContent").style.display = "flex";
+  }
 
-function parseTRDate(str){
-  const m = str.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-  if(!m) return null;
-  const gun  = parseInt(m[1],10);
-  const ay   = parseInt(m[2],10)-1;
-  const yil  = parseInt(m[3],10);
-  const d = new Date(yil,ay,gun);
-  d.setHours(0,0,0,0);
-  return isNaN(d.getTime()) ? null : d;
-}
+  function clearSavedCode(){
+    localStorage.removeItem(STORAGE_KEY);
+    document.getElementById("userCode").value = "";
+    showMsg("Kayıtlı kod temizlendi. Lütfen tekrar giriş yapın.", false);
+    // overlay zaten açık, main kapalı kalsın
+    document.getElementById("mainContent").style.display = "none";
+    document.getElementById("overlay").style.display = "flex";
+  }
 
-/* ========= SAYFA AÇ ========= */
-function openPage(page){
-  // Ana sayfaya kullanıcı kodu ile girildiyse sayfaları aç
-  window.location.href = page;
-}
+  // kod.txt format önerisi:
+  // KOD;2025-01-01;2025-12-31
+  // Örn: ABC123;2025-01-01;2025-12-31
+  //
+  // Not: Tarih alanı yoksa sadece kod kontrolü de çalışır (eşleşme yeter)
+  async function checkUserCode(isAuto=false){
+    const input = document.getElementById("userCode");
+    const code = (input.value || "").trim();
+
+    if (!code) {
+      showMsg("Lütfen kullanıcı kodunu giriniz.");
+      return;
+    }
+
+    showMsg(isAuto ? "Kayıtlı kod kontrol ediliyor..." : "Kontrol ediliyor...", false);
+
+    try{
+      const res = await fetch(KOD_TXT_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("kod.txt okunamadı");
+      const text = await res.text();
+
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+      const now = new Date();
+      let matched = false;
+      let valid   = false;
+
+      for (const line of lines) {
+        // satır yorum ise geç
+        if (line.startsWith("#") || line.startsWith("//")) continue;
+
+        // ayırıcı ; veya , olabilir
+        const parts = line.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+        const fileCode = (parts[0] || "").trim();
+
+        if (!fileCode) continue;
+
+        if (fileCode === code) {
+          matched = true;
+
+          // tarih yoksa sadece eşleşme yeter
+          if (parts.length < 3) {
+            valid = true;
+            break;
+          }
+
+          const startStr = parts[1];
+          const endStr   = parts[2];
+
+          const start = parseISODate(startStr);
+          const end   = parseISODate(endStr);
+
+          // tarih parse edilemediyse, yine de eşleşmeyi kabul etmeyelim (daha güvenli)
+          if (!start || !end) {
+            valid = false;
+            break;
+          }
+
+          // bitiş gününü gün sonuna kadar geçerli say
+          end.setHours(23,59,59,999);
+
+          if (now >= start && now <= end) {
+            valid = true;
+          } else {
+            valid = false;
+          }
+          break;
+        }
+      }
+
+      if (!matched) {
+        localStorage.removeItem(STORAGE_KEY);
+        showMsg("Kullanıcı kodu hatalı.");
+        return;
+      }
+
+      if (!valid) {
+        localStorage.removeItem(STORAGE_KEY);
+        showMsg("Kullanıcı kodu süresi geçersiz / dolmuş olabilir.");
+        return;
+      }
+
+      // geçerli -> kaydet ve içeriği aç
+      localStorage.setItem(STORAGE_KEY, code);
+      showMsg("Kod doğrulandı. Hoş geldiniz!", false);
+      showMain();
+
+    } catch(err){
+      console.error(err);
+      showMsg("Doğrulama sırasında hata oldu. İnternet bağlantınızı veya kod.txt yolunu kontrol edin.");
+    }
+  }
+
+  function parseISODate(s){
+    // "YYYY-MM-DD" beklenir
+    if (!s) return null;
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const y = Number(m[1]);
+    const mo = Number(m[2]) - 1;
+    const d = Number(m[3]);
+    const dt = new Date(y, mo, d);
+    if (isNaN(dt.getTime())) return null;
+    return dt;
+  }
+
+  // Enter ile giriş
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && document.getElementById("overlay").style.display !== "none") {
+      checkUserCode(false);
+    }
+  });
 </script>
 
 </body>
